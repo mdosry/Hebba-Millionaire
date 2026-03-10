@@ -3,30 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hebba Among Us - Millionaire Edition</title>
+    <title>Hebba: Millionaire Among Us</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
     <style>
-        body { margin: 0; background: #1a2a3a; overflow: hidden; touch-action: none; }
-        #game-ui { position: absolute; top: 10px; right: 10px; width: 150px; pointer-events: none; }
-        .task-list { background: rgba(0,0,0,0.6); padding: 10px; border-radius: 10px; color: gold; font-family: sans-serif; font-size: 12px; }
-        #action-btn { 
-            position: absolute; bottom: 30px; right: 30px; width: 80px; height: 80px; 
-            background: rgba(241, 196, 15, 0.8); border-radius: 50%; border: 4px solid white;
-            color: #1a2a3a; font-weight: bold; display: flex; align-items: center; justify-content: center;
+        body { margin: 0; background: #000; overflow: hidden; touch-action: none; font-family: sans-serif; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .hud { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; border-left: 5px solid gold; pointer-events: auto; }
+        .role-tag { color: gold; font-weight: bold; font-size: 20px; margin-bottom: 5px; }
+        .task { color: white; font-size: 14px; margin: 5px 0; }
+        #btn-action { 
+            position: absolute; bottom: 40px; right: 40px; width: 90px; height: 90px; 
+            background: rgba(255, 215, 0, 0.9); border: 5px solid #fff; border-radius: 50%; 
+            color: #1a2a3a; font-weight: 800; display: flex; align-items: center; justify-content: center;
+            pointer-events: auto; box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
     </style>
 </head>
 <body>
 
-    <div id="game-ui">
-        <div class="task-list">
-            <b>المهام المتبقية:</b>
-            <div id="t1">📍 صب القهوة</div>
-            <div id="t2">📍 تبخير المجلس</div>
+    <div id="ui-layer">
+        <div class="hud">
+            <div id="my-role" class="role-tag">جاري التحديد...</div>
+            <div id="task-1" class="task">📍 مهمة: ترتيب التكايات</div>
+            <div id="task-2" class="task">📍 مهمة: تبخير المجلس</div>
         </div>
+        <div id="btn-action" onclick="doAction()">استخدام</div>
     </div>
-
-    <div id="action-btn">استخدام</div>
 
     <script>
         const config = {
@@ -37,48 +39,70 @@
             scene: { preload: preload, create: create, update: update }
         };
 
-        const game = new Phaser.Game(config);
         let player;
-        let joystick;
-        let cursors;
+        let map;
+        let isMillionaire = Math.random() < 0.2;
+        const game = new Phaser.Game(config);
 
         function preload() {
-            // تحميل صورة الشخصية (أمونج أس)
-            this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-dude.png');
-            // تحميل خريطة تخيلية للمجلس
-            this.load.image('tiles', 'https://labs.phaser.io/assets/sets/objects/floor.png');
+            // صور الشخصيات ملونة (أمونج أس)
+            this.load.spritesheet('crew', 'https://labs.phaser.io/assets/sprites/invader32x32x4.png', { frameWidth: 32, frameHeight: 32 });
         }
 
         function create() {
-            // إضافة أرضية المجلس
-            for (let i = 0; i < 10; i++) {
-                for (let j = 0; j < 10; j++) {
-                    this.add.image(i * 128, j * 128, 'tiles');
-                }
+            // رسم المجلس (تخيلي برمجياً)
+            const graphics = this.add.graphics();
+            graphics.lineStyle(8, 0xffd700, 1);
+            
+            // غرفة 1: المجلس الرئيسي
+            graphics.strokeRect(50, 50, 400, 300);
+            this.add.text(60, 60, "الديوانية (Main)", { fill: '#ffd700' });
+
+            // غرفة 2: المقلط
+            graphics.strokeRect(450, 50, 300, 300);
+            this.add.text(460, 60, "المقلط (Dining)", { fill: '#ffd700' });
+
+            // إنشاء اللاعب (بشكل "أمونج أس" بسيط ملون)
+            player = this.physics.add.sprite(200, 200, 'crew');
+            player.setScale(2);
+            if(isMillionaire) {
+                player.setTint(0xff0000); // الأحمر هو المليونير
+                document.getElementById('my-role').innerText = "الدور: مليونير 💰";
+                document.getElementById('btn-action').innerText = "غدر";
+            } else {
+                player.setTint(0x00ff00); // الأخضر من النشامى
+                document.getElementById('my-role').innerText = "الدور: من النشامى 👷‍♂️";
             }
 
-            // إنشاء اللاعب
-            player = this.physics.add.sprite(window.innerWidth/2, window.innerHeight/2, 'player');
-            player.setCollideWorldBounds(true);
-            player.setScale(2);
-
-            // إعداد التحكم باللمس
-            this.input.on('pointermove', function (pointer) {
+            // الكاميرا
+            this.cameras.main.startFollow(player);
+            
+            // تحكم اللمس
+            this.input.on('pointermove', (pointer) => {
                 if (pointer.isDown) {
                     this.physics.moveToObject(player, pointer, 200);
                 }
-            }, this);
-
-            this.input.on('pointerup', function () {
-                player.body.setVelocity(0);
             });
 
-            // الكاميرا تلحق اللاعب
-            this.cameras.main.startFollow(player);
+            this.input.on('pointerup', () => {
+                player.body.setVelocity(0);
+            });
         }
 
         function update() {
-            // هنا نضيف منطق إذا اقترب من مهمة يشتغل زر "استخدام"
+            // منع اللاعب من الخروج من حدود المجلس (بشكل مبسط)
+            if(player.x < 50) player.x = 50;
+            if(player.y < 50) player.y = 50;
+        }
+
+        function doAction() {
+            if(isMillionaire) {
+                alert("💰 تم نقل الثروة (القتل)! هربت من الشبهة.");
+            } else {
+                alert("📍 جاري ترتيب المجلس... تم إنهاء المهمة!");
+                document.getElementById('task-1').style.textDecoration = "line-through";
+                document.getElementById('task-1').style.opacity = "0.5";
+            }
         }
     </script>
 </body>
