@@ -3,59 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>خاين المجلس - هبّة</title>
+    <title>هبّة: أمونج أس (مود المليونير)</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;800&display=swap" rel="stylesheet">
     <style>
-        :root { --navy: #1a2a3a; --gold: #f1c40f; }
+        :root { --navy: #1a2a3a; --gold: #f1c40f; --dark-blue: #14212d; --green: #27ae60; }
         body { 
-            background: var(--navy); 
-            font-family: 'Tajawal', sans-serif; 
-            color: white; 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            height: 100vh; 
-            overflow: hidden; 
+            background: var(--navy); font-family: 'Tajawal', sans-serif; color: white; 
+            margin: 0; display: flex; align-items: center; justify-content: center; 
+            height: 100vh; overflow: hidden; text-align: center;
         }
+        .hidden { display: none !important; }
+        .screen { animation: fadeIn 0.5s ease-out; width: 95%; max-width: 450px; }
         
-        .hero { text-align: center; animation: fadeIn 1.5s ease-in; }
-        .logo { font-size: 70px; font-weight: 800; margin: 0; line-height: 1; }
-        .logo span { color: var(--gold); }
-        .tagline { font-size: 18px; color: var(--gold); opacity: 0.8; margin-top: 10px; }
-
-        .menu { margin-top: 50px; display: flex; flex-direction: column; gap: 15px; width: 85%; max-width: 320px; }
+        /* --- التصميم العام --- */
         .btn { 
-            background: var(--gold); 
-            color: var(--navy); 
-            border: none; 
-            padding: 16px; 
-            border-radius: 50px; 
-            font-size: 18px; 
-            font-weight: 800; 
-            cursor: pointer; 
-            transition: 0.3s; 
-            text-align: center;
+            background: var(--gold); color: var(--navy); border: none; width: 100%;
+            padding: 15px; border-radius: 15px; font-size: 18px; font-weight: 800; 
+            cursor: pointer; margin-bottom: 10px; font-family: 'Tajawal';
         }
-        .btn:active { transform: scale(0.95); }
-        .btn-outline { background: transparent; color: white; border: 2.5px solid var(--gold); }
+        .task-item {
+            background: rgba(255,255,255,0.1); padding: 12px; border-radius: 10px;
+            margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
+            border-right: 5px solid var(--gold);
+        }
+        .task-done { border-right-color: var(--green); opacity: 0.6; text-decoration: line-through; }
+        
+        /* --- شريط التقدم --- */
+        .progress-container { width: 100%; background: #333; height: 15px; border-radius: 10px; margin: 15px 0; overflow: hidden; }
+        .progress-bar { background: var(--green); height: 100%; width: 0%; transition: 0.5s; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <div class="hero">
-        <h1 class="logo">هبّة<span>.</span></h1>
-        <p class="tagline">لعبة خاين المجلس 🕵️‍♂️ (مود المليونير)</p>
+    <div id="main-menu" class="screen">
+        <h1 style="font-size: 50px;">هبّة<span>.</span></h1>
+        <p style="color:var(--gold)">AMONG US: مود المليونير</p>
+        <button class="btn" onclick="goToLobby()">إنشاء مجلس (6 لاعبين)</button>
     </div>
 
-    <div class="menu">
-        <button class="btn">ابدأ مجلس جديد</button>
-        <button class="btn btn-outline">ادخل كود المجلس</button>
-        <p style="font-size: 13px; opacity: 0.5; margin-top: 25px; text-align: center;">الحد الأقصى لـ 6 لاعبين في الجولة</p>
+    <div id="role-screen" class="screen hidden">
+        <div style="background:var(--dark-blue); padding: 25px; border-radius: 20px; border: 2px solid var(--gold);">
+            <h2 id="role-title">جاري تحديد دورك...</h2>
+            <p id="role-desc"></p>
+            <button class="btn" onclick="startGameplay()">دخول المجلس</button>
+        </div>
     </div>
 
+    <div id="gameplay" class="screen hidden">
+        <div style="text-align: right; margin-bottom: 20px;">
+            <h3 id="player-identity" style="margin:0; color:var(--gold);"></h3>
+            <div class="progress-container"><div id="main-progress" class="progress-bar"></div></div>
+            <p style="font-size: 12px;">إجمالي مهام المجلس</p>
+        </div>
+
+        <div id="tasks-list">
+            </div>
+
+        <div style="margin-top: 20px; display: flex; gap: 10px;">
+            <button class="btn" style="background:#e74c3c; color:white;" onclick="emergency()">اجتماع طارئ 🚨</button>
+            <button id="special-btn" class="btn hidden" style="background:white;" onclick="millionaireAction()">نقل الثروة 💰</button>
+        </div>
+    </div>
+
+    <script>
+        let isMillionaire = false;
+        let tasksDone = 0;
+        const totalTasks = 3;
+
+        function goToLobby() {
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('role-screen').classList.remove('hidden');
+            
+            isMillionaire = Math.random() < 0.25; 
+            const title = document.getElementById('role-title');
+            const desc = document.getElementById('role-desc');
+
+            if(isMillionaire) {
+                title.innerText = "أنت المليونير السري 💰";
+                desc.innerText = "لا تقتل! مهمتك نقل 'الدين' للآخرين سراً وإتمام صفقاتك لزيادة قوتك.";
+            } else {
+                title.innerText = "أنت من النشامى 👷‍♂️";
+                desc.innerText = "خلص مهام الضيافة وراقب الحركات المشبوهة لكشف الخاين.";
+            }
+        }
+
+        function startGameplay() {
+            document.getElementById('role-screen').classList.add('hidden');
+            document.getElementById('gameplay').classList.remove('hidden');
+            
+            const list = document.getElementById('tasks-list');
+            const pId = document.getElementById('player-identity');
+            
+            if(isMillionaire) {
+                pId.innerText = "الدور: مليونير";
+                document.getElementById('special-btn').classList.remove('hidden');
+                addTasks(['توقيع صفقة عقارية', 'تحويل رصيد سري', 'تزييف سجلات المجلس']);
+            } else {
+                pId.innerText = "الدور: من النشامى";
+                addTasks(['صب القهوة للضيوف', 'تبخير طقم المجلس', 'ترتيب التكايات']);
+            }
+        }
+
+        function addTasks(tasks) {
+            const list = document.getElementById('tasks-list');
+            tasks.forEach((t, index) => {
+                list.innerHTML += `
+                    <div class="task-item" id="task-${index}">
+                        <span>${t}</span>
+                        <button onclick="completeTask(${index})" style="background:var(--gold); border:none; border-radius:5px; padding:5px 10px; font-weight:bold;">إتمام</button>
+                    </div>
+                `;
+            });
+        }
+
+        function completeTask(id) {
+            const taskDiv = document.getElementById(`task-${id}`);
+            if(!taskDiv.classList.contains('task-done')) {
+                taskDiv.classList.add('task-done');
+                taskDiv.querySelector('button').innerText = "✅";
+                tasksDone++;
+                document.getElementById('main-progress').style.width = (tasksDone / totalTasks * 100) + "%";
+            }
+        }
+
+        function emergency() {
+            alert("🚨 تم استدعاء الجميع للمجلس! ابدأوا التحقيق.. من هو المليونير؟");
+        }
+
+        function millionaireAction() {
+            alert("💰 تمت العملية! لقد نقلت 'الدين' للاعب المجاور سراً.");
+        }
+    </script>
 </body>
 </html>
