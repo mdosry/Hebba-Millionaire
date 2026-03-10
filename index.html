@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خاين المجلس - هبّة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --navy: #1a2a3a; --gold: #f1c40f; }
+        body { 
+            background: var(--navy); 
+            font-family: 'Tajawal', sans-serif; 
+            color: white; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+        
+        .hero { text-align: center; animation: fadeIn 1.5s ease-in; }
+        .logo { font-size: 70px; font-weight: 800; margin: 0; line-height: 1; }
+        .logo span { color: var(--gold); }
+        .tagline { font-size: 18px; color: var(--gold); opacity: 0.8; margin-top: 10px; }
+
+        .menu { margin-top: 50px; display: flex; flex-direction: column; gap: 15px; width: 85%; max-width: 320px; }
+        .btn { 
+            background: var(--gold); 
+            color: var(--navy); 
+            border: none; 
+            padding: 16px; 
+            border-radius: 50px; 
+            font-size: 18px; 
+            font-weight: 800; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            text-align: center;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-outline { background: transparent; color: white; border: 2.5px solid var(--gold); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="hero">
+        <h1 class="logo">هبّة<span>.</span></h1>
+        <p class="tagline">لعبة خاين المجلس 🕵️‍♂️ (مود المليونير)</p>
+    </div>
+
+    <div class="menu">
+        <button class="btn">ابدأ مجلس جديد</button>
+        <button class="btn btn-outline">ادخل كود المجلس</button>
+        <p style="font-size: 13px; opacity: 0.5; margin-top: 25px; text-align: center;">الحد الأقصى لـ 6 لاعبين في الجولة</p>
+    </div>
+
+</body>
+</html>
