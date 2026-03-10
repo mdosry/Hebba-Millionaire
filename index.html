@@ -2,138 +2,83 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>هبّة: أمونج أس (مود المليونير)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hebba Among Us - Millionaire Edition</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
     <style>
-        :root { --navy: #1a2a3a; --gold: #f1c40f; --dark-blue: #14212d; --green: #27ae60; }
-        body { 
-            background: var(--navy); font-family: 'Tajawal', sans-serif; color: white; 
-            margin: 0; display: flex; align-items: center; justify-content: center; 
-            height: 100vh; overflow: hidden; text-align: center;
+        body { margin: 0; background: #1a2a3a; overflow: hidden; touch-action: none; }
+        #game-ui { position: absolute; top: 10px; right: 10px; width: 150px; pointer-events: none; }
+        .task-list { background: rgba(0,0,0,0.6); padding: 10px; border-radius: 10px; color: gold; font-family: sans-serif; font-size: 12px; }
+        #action-btn { 
+            position: absolute; bottom: 30px; right: 30px; width: 80px; height: 80px; 
+            background: rgba(241, 196, 15, 0.8); border-radius: 50%; border: 4px solid white;
+            color: #1a2a3a; font-weight: bold; display: flex; align-items: center; justify-content: center;
         }
-        .hidden { display: none !important; }
-        .screen { animation: fadeIn 0.5s ease-out; width: 95%; max-width: 450px; }
-        
-        /* --- التصميم العام --- */
-        .btn { 
-            background: var(--gold); color: var(--navy); border: none; width: 100%;
-            padding: 15px; border-radius: 15px; font-size: 18px; font-weight: 800; 
-            cursor: pointer; margin-bottom: 10px; font-family: 'Tajawal';
-        }
-        .task-item {
-            background: rgba(255,255,255,0.1); padding: 12px; border-radius: 10px;
-            margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
-            border-right: 5px solid var(--gold);
-        }
-        .task-done { border-right-color: var(--green); opacity: 0.6; text-decoration: line-through; }
-        
-        /* --- شريط التقدم --- */
-        .progress-container { width: 100%; background: #333; height: 15px; border-radius: 10px; margin: 15px 0; overflow: hidden; }
-        .progress-bar { background: var(--green); height: 100%; width: 0%; transition: 0.5s; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <div id="main-menu" class="screen">
-        <h1 style="font-size: 50px;">هبّة<span>.</span></h1>
-        <p style="color:var(--gold)">AMONG US: مود المليونير</p>
-        <button class="btn" onclick="goToLobby()">إنشاء مجلس (6 لاعبين)</button>
-    </div>
-
-    <div id="role-screen" class="screen hidden">
-        <div style="background:var(--dark-blue); padding: 25px; border-radius: 20px; border: 2px solid var(--gold);">
-            <h2 id="role-title">جاري تحديد دورك...</h2>
-            <p id="role-desc"></p>
-            <button class="btn" onclick="startGameplay()">دخول المجلس</button>
+    <div id="game-ui">
+        <div class="task-list">
+            <b>المهام المتبقية:</b>
+            <div id="t1">📍 صب القهوة</div>
+            <div id="t2">📍 تبخير المجلس</div>
         </div>
     </div>
 
-    <div id="gameplay" class="screen hidden">
-        <div style="text-align: right; margin-bottom: 20px;">
-            <h3 id="player-identity" style="margin:0; color:var(--gold);"></h3>
-            <div class="progress-container"><div id="main-progress" class="progress-bar"></div></div>
-            <p style="font-size: 12px;">إجمالي مهام المجلس</p>
-        </div>
-
-        <div id="tasks-list">
-            </div>
-
-        <div style="margin-top: 20px; display: flex; gap: 10px;">
-            <button class="btn" style="background:#e74c3c; color:white;" onclick="emergency()">اجتماع طارئ 🚨</button>
-            <button id="special-btn" class="btn hidden" style="background:white;" onclick="millionaireAction()">نقل الثروة 💰</button>
-        </div>
-    </div>
+    <div id="action-btn">استخدام</div>
 
     <script>
-        let isMillionaire = false;
-        let tasksDone = 0;
-        const totalTasks = 3;
+        const config = {
+            type: Phaser.AUTO,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            physics: { default: 'arcade', arcade: { debug: false } },
+            scene: { preload: preload, create: create, update: update }
+        };
 
-        function goToLobby() {
-            document.getElementById('main-menu').classList.add('hidden');
-            document.getElementById('role-screen').classList.remove('hidden');
-            
-            isMillionaire = Math.random() < 0.25; 
-            const title = document.getElementById('role-title');
-            const desc = document.getElementById('role-desc');
+        const game = new Phaser.Game(config);
+        let player;
+        let joystick;
+        let cursors;
 
-            if(isMillionaire) {
-                title.innerText = "أنت المليونير السري 💰";
-                desc.innerText = "لا تقتل! مهمتك نقل 'الدين' للآخرين سراً وإتمام صفقاتك لزيادة قوتك.";
-            } else {
-                title.innerText = "أنت من النشامى 👷‍♂️";
-                desc.innerText = "خلص مهام الضيافة وراقب الحركات المشبوهة لكشف الخاين.";
-            }
+        function preload() {
+            // تحميل صورة الشخصية (أمونج أس)
+            this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-dude.png');
+            // تحميل خريطة تخيلية للمجلس
+            this.load.image('tiles', 'https://labs.phaser.io/assets/sets/objects/floor.png');
         }
 
-        function startGameplay() {
-            document.getElementById('role-screen').classList.add('hidden');
-            document.getElementById('gameplay').classList.remove('hidden');
-            
-            const list = document.getElementById('tasks-list');
-            const pId = document.getElementById('player-identity');
-            
-            if(isMillionaire) {
-                pId.innerText = "الدور: مليونير";
-                document.getElementById('special-btn').classList.remove('hidden');
-                addTasks(['توقيع صفقة عقارية', 'تحويل رصيد سري', 'تزييف سجلات المجلس']);
-            } else {
-                pId.innerText = "الدور: من النشامى";
-                addTasks(['صب القهوة للضيوف', 'تبخير طقم المجلس', 'ترتيب التكايات']);
+        function create() {
+            // إضافة أرضية المجلس
+            for (let i = 0; i < 10; i++) {
+                for (let j = 0; j < 10; j++) {
+                    this.add.image(i * 128, j * 128, 'tiles');
+                }
             }
-        }
 
-        function addTasks(tasks) {
-            const list = document.getElementById('tasks-list');
-            tasks.forEach((t, index) => {
-                list.innerHTML += `
-                    <div class="task-item" id="task-${index}">
-                        <span>${t}</span>
-                        <button onclick="completeTask(${index})" style="background:var(--gold); border:none; border-radius:5px; padding:5px 10px; font-weight:bold;">إتمام</button>
-                    </div>
-                `;
+            // إنشاء اللاعب
+            player = this.physics.add.sprite(window.innerWidth/2, window.innerHeight/2, 'player');
+            player.setCollideWorldBounds(true);
+            player.setScale(2);
+
+            // إعداد التحكم باللمس
+            this.input.on('pointermove', function (pointer) {
+                if (pointer.isDown) {
+                    this.physics.moveToObject(player, pointer, 200);
+                }
+            }, this);
+
+            this.input.on('pointerup', function () {
+                player.body.setVelocity(0);
             });
+
+            // الكاميرا تلحق اللاعب
+            this.cameras.main.startFollow(player);
         }
 
-        function completeTask(id) {
-            const taskDiv = document.getElementById(`task-${id}`);
-            if(!taskDiv.classList.contains('task-done')) {
-                taskDiv.classList.add('task-done');
-                taskDiv.querySelector('button').innerText = "✅";
-                tasksDone++;
-                document.getElementById('main-progress').style.width = (tasksDone / totalTasks * 100) + "%";
-            }
-        }
-
-        function emergency() {
-            alert("🚨 تم استدعاء الجميع للمجلس! ابدأوا التحقيق.. من هو المليونير؟");
-        }
-
-        function millionaireAction() {
-            alert("💰 تمت العملية! لقد نقلت 'الدين' للاعب المجاور سراً.");
+        function update() {
+            // هنا نضيف منطق إذا اقترب من مهمة يشتغل زر "استخدام"
         }
     </script>
 </body>
